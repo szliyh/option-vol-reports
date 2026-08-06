@@ -1,0 +1,357 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8">
+<title>期权波动率冰点/高点事件研究</title>
+<style>
+body { font-family: "Microsoft YaHei", sans-serif; margin: 24px; color: #222; }
+h1 { color: #0d47a1; border-bottom: 3px solid #0d47a1; padding-bottom: 8px; }
+h2 { color: #0d47a1; margin-top: 36px; }
+h3 { color: #37474f; }
+table { border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+th, td { border: 1px solid #ccc; padding: 5px 9px; text-align: right; }
+th { background: #e3f2fd; }
+td:first-child, th:first-child { text-align: left; }
+.badge-iv { color: #1565c0; font-weight: bold; }
+.badge-hv { color: #8e24aa; font-weight: bold; }
+.note { background: #fff8e1; border-left: 4px solid #ffb300; padding: 8px 14px; margin: 12px 0; }
+img.chart { max-width: 100%; margin: 12px 0; border: 1px solid #ddd; }
+.pos { color: #c62828; } .neg { color: #2e7d32; }
+.small { font-size: 12px; color: #666; }
+</style></head><body>
+<h1>期权波动率冰点/高点 → 正股 5 日极值 事件研究报告</h1>
+<p class="small">数据截至 2026-08-05 (上交所期权风险指标) / 2026-08-06 (ETF 日线) · 生成时间: 2026-08-06 10:37</p>
+<div class="note"><b>口径说明</b>：沪市 4 标的 (510050/510300/510500/588000) 使用<b>真实隐含波动率 IV</b>（上交所官方风险指标，平值 ATM 口径）；深市 3 标的 (159919/159922/159915) 交易所不公布历史 IV，用正股 <b>HV20</b>（20 日年化历史波动率）代理，解读时注意口径差异。事件窗口 = 事件日 T 收盘后 T+1..T+5 共 5 个交易日。</div>
+
+<h2>一、各品种波动率历史经验值总览</h2>
+<table><tr><th>标的</th><th>品种</th><th>数据源</th><th>样本(交易日)</th><th>起始</th><th>当前值</th><th>当前分位</th><th>历史最低</th><th>P5冰点线</th><th>P10</th><th>P50中位</th><th>P90</th><th>P95高点线</th><th>历史最高</th></tr>
+<tr><td>510050</td><td>上证50ETF</td><td><span class="badge-iv">IV</span></td>
+<td>2791</td><td>2015-02-09</td>
+<td>19.3%</td><td>51%</td>
+<td>7.4%</td><td>13.4%</td><td>14.5%</td>
+<td>19.2%</td><td>29.4%</td><td>36.7%</td>
+<td>77.7%</td></tr>
+<tr><td>510300</td><td>沪深300ETF(沪)</td><td><span class="badge-iv">IV</span></td>
+<td>1604</td><td>2019-12-23</td>
+<td>22.1%</td><td>77%</td>
+<td>12.5%</td><td>14.4%</td><td>15.0%</td>
+<td>19.0%</td><td>24.3%</td><td>26.6%</td>
+<td>49.6%</td></tr>
+<tr><td>510500</td><td>中证500ETF(沪)</td><td><span class="badge-iv">IV</span></td>
+<td>939</td><td>2022-09-19</td>
+<td>28.9%</td><td>86%</td>
+<td>12.2%</td><td>14.3%</td><td>15.0%</td>
+<td>22.0%</td><td>30.0%</td><td>31.3%</td>
+<td>53.1%</td></tr>
+<tr><td>588000</td><td>科创50ETF</td><td><span class="badge-iv">IV</span></td>
+<td>769</td><td>2023-06-05</td>
+<td>50.9%</td><td>93%</td>
+<td>17.6%</td><td>20.6%</td><td>21.3%</td>
+<td>30.5%</td><td>46.1%</td><td>53.7%</td>
+<td>93.7%</td></tr>
+<tr><td>159919</td><td>沪深300ETF(深)</td><td><span class="badge-hv">HV20</span></td>
+<td>1605</td><td>2019-12-23</td>
+<td>26.0%</td><td>85%</td>
+<td>6.2%</td><td>10.0%</td><td>11.0%</td>
+<td>16.0%</td><td>28.4%</td><td>33.6%</td>
+<td>64.0%</td></tr>
+<tr><td>159922</td><td>中证500ETF(深)</td><td><span class="badge-hv">HV20</span></td>
+<td>940</td><td>2022-09-19</td>
+<td>42.7%</td><td>95%</td>
+<td>7.8%</td><td>11.0%</td><td>11.8%</td>
+<td>18.7%</td><td>31.8%</td><td>41.6%</td>
+<td>66.5%</td></tr>
+<tr><td>159915</td><td>创业板ETF</td><td><span class="badge-hv">HV20</span></td>
+<td>940</td><td>2022-09-19</td>
+<td>60.3%</td><td>97%</td>
+<td>11.3%</td><td>14.6%</td><td>15.7%</td>
+<td>23.2%</td><td>41.6%</td><td>50.4%</td>
+<td>126.3%</td></tr>
+</table>
+<h2>二、极值事件后正股 5 日表现（严格口径汇总）</h2><img class="chart" src="chart_summary_bar.png">
+<h2>510050 上证50ETF（IV(真实)）</h2>
+<h3>波动率历史分布经验值</h3>
+<table><tr><th>min</th><th>P1</th><th>P5</th><th>P10</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P95</th><th>P99</th><th>max</th><th>均值</th><th>标准差</th></tr>
+<tr><td>7.40%</td><td>10.55%</td><td>13.36%</td><td>14.50%</td><td>16.34%</td><td>19.17%</td><td>22.59%</td><td>29.42%</td><td>36.70%</td><td>49.20%</td><td>77.74%</td><td>20.87%</td><td>7.50%</td></tr></table>
+<p class="small">当前值 <b>19.28%</b>，处于历史 <b>51%</b> 分位（2026-08-05 收盘口径）。经验参考：波动率 &lt; P10 视为冰点区（卖方性价比低/买方入场区），&gt; P90 视为高位区（买方风险高/卖方性价比高）。</p>
+<h3>事件统计：波动率极值后 5 个交易日正股表现</h3>
+<table><tr><th>事件类型</th><th>事件数</th>
+<th>出现更低低点</th><th>出现更低收盘</th><th>窗口最低·平均</th><th>窗口最低·中位</th><th>窗口最低·最差</th>
+<th>T+5收盘·平均</th><th>T+5收盘·中位</th><th>T+5上涨概率</th>
+<th>出现更高高点</th><th>出现更高收盘</th><th>窗口最高·平均</th><th>窗口最高·中位</th><th>窗口最高·最好</th></tr>
+<tr><td>冰点·上市以来新低</td><td>14</td>
+<td>92.9%</td><td>42.9%</td>
+<td>-0.8%</td><td>-0.7%</td><td>-2.0%</td>
+<td>1.9%</td><td>1.5%</td><td>71.4%</td>
+<td>92.9%</td><td>92.9%</td>
+<td>2.8%</td><td>2.2%</td><td>6.7%</td></tr>
+<tr><td>冰点·≤历史P5</td><td>15</td>
+<td>93.3%</td><td>66.7%</td>
+<td>-1.3%</td><td>-1.0%</td><td>-4.9%</td>
+<td>0.6%</td><td>0.9%</td><td>60.0%</td>
+<td>86.7%</td><td>80.0%</td>
+<td>1.7%</td><td>1.5%</td><td>5.0%</td></tr>
+<tr><td>高点·上市以来新高</td><td>6</td>
+<td>100.0%</td><td>66.7%</td>
+<td>-7.3%</td><td>-7.1%</td><td>-16.6%</td>
+<td>1.8%</td><td>4.4%</td><td>66.7%</td>
+<td>100.0%</td><td>100.0%</td>
+<td>7.3%</td><td>7.8%</td><td>12.0%</td></tr>
+<tr><td>高点·≥历史P95</td><td>5</td>
+<td>80.0%</td><td>60.0%</td>
+<td>-3.7%</td><td>-5.5%</td><td>-7.8%</td>
+<td>6.4%</td><td>8.5%</td><td>60.0%</td>
+<td>80.0%</td><td>80.0%</td>
+<td>11.0%</td><td>10.4%</td><td>25.9%</td></tr>
+</table>
+<h3>事件明细（严格口径：上市以来新低/新高）</h3>
+<p class="small">冰点·上市以来新低 共 14 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2015-02-09</td><td>34.38%</td></tr><tr><td>2016-04-21</td><td>23.63%</td></tr><tr><td>2016-05-30</td><td>17.41%</td></tr><tr><td>2016-07-22</td><td>16.10%</td></tr><tr><td>2016-08-05</td><td>15.16%</td></tr><tr><td>2016-10-17</td><td>13.09%</td></tr><tr><td>2017-01-20</td><td>12.77%</td></tr><tr><td>2017-02-03</td><td>12.62%</td></tr><tr><td>2017-02-23</td><td>12.36%</td></tr><tr><td>2017-03-17</td><td>12.04%</td></tr><tr><td>2017-03-30</td><td>10.59%</td></tr><tr><td>2017-04-14</td><td>10.28%</td></tr><tr><td>2017-05-05</td><td>8.35%</td></tr><tr><td>2017-05-18</td><td>7.40%</td></tr></table>
+<p class="small">高点·上市以来新高 共 6 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2015-02-09</td><td>34.38%</td></tr><tr><td>2015-04-07</td><td>34.65%</td></tr><tr><td>2015-06-02</td><td>44.83%</td></tr><tr><td>2015-06-19</td><td>49.20%</td></tr><tr><td>2015-07-06</td><td>62.38%</td></tr><tr><td>2015-09-01</td><td>77.74%</td></tr></table>
+<img class="chart" src="chart_510050.png">
+<h2>510300 沪深300ETF(沪)（IV(真实)）</h2>
+<h3>波动率历史分布经验值</h3>
+<table><tr><th>min</th><th>P1</th><th>P5</th><th>P10</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P95</th><th>P99</th><th>max</th><th>均值</th><th>标准差</th></tr>
+<tr><td>12.54%</td><td>13.90%</td><td>14.39%</td><td>15.04%</td><td>16.63%</td><td>19.00%</td><td>21.72%</td><td>24.28%</td><td>26.60%</td><td>31.67%</td><td>49.62%</td><td>19.53%</td><td>3.91%</td></tr></table>
+<p class="small">当前值 <b>22.07%</b>，处于历史 <b>77%</b> 分位（2026-08-05 收盘口径）。经验参考：波动率 &lt; P10 视为冰点区（卖方性价比低/买方入场区），&gt; P90 视为高位区（买方风险高/卖方性价比高）。</p>
+<h3>事件统计：波动率极值后 5 个交易日正股表现</h3>
+<table><tr><th>事件类型</th><th>事件数</th>
+<th>出现更低低点</th><th>出现更低收盘</th><th>窗口最低·平均</th><th>窗口最低·中位</th><th>窗口最低·最差</th>
+<th>T+5收盘·平均</th><th>T+5收盘·中位</th><th>T+5上涨概率</th>
+<th>出现更高高点</th><th>出现更高收盘</th><th>窗口最高·平均</th><th>窗口最高·中位</th><th>窗口最高·最好</th></tr>
+<tr><td>冰点·上市以来新低</td><td>4</td>
+<td>75.0%</td><td>75.0%</td>
+<td>-2.4%</td><td>-2.5%</td><td>-4.4%</td>
+<td>-0.8%</td><td>-1.6%</td><td>25.0%</td>
+<td>100.0%</td><td>50.0%</td>
+<td>1.2%</td><td>0.8%</td><td>3.1%</td></tr>
+<tr><td>冰点·≤历史P5</td><td>24</td>
+<td>91.7%</td><td>75.0%</td>
+<td>-2.1%</td><td>-1.2%</td><td>-11.0%</td>
+<td>-0.8%</td><td>-0.7%</td><td>45.8%</td>
+<td>87.5%</td><td>70.8%</td>
+<td>0.9%</td><td>0.7%</td><td>3.1%</td></tr>
+<tr><td>高点·上市以来新高</td><td>5</td>
+<td>80.0%</td><td>60.0%</td>
+<td>-6.1%</td><td>-9.0%</td><td>-11.1%</td>
+<td>-2.1%</td><td>-2.7%</td><td>40.0%</td>
+<td>40.0%</td><td>40.0%</td>
+<td>1.0%</td><td>-0.1%</td><td>6.9%</td></tr>
+<tr><td>高点·≥历史P95</td><td>12</td>
+<td>100.0%</td><td>66.7%</td>
+<td>-3.9%</td><td>-2.8%</td><td>-11.1%</td>
+<td>0.1%</td><td>1.0%</td><td>50.0%</td>
+<td>83.3%</td><td>66.7%</td>
+<td>3.7%</td><td>4.2%</td><td>10.0%</td></tr>
+</table>
+<h3>事件明细（严格口径：上市以来新低/新高）</h3>
+<p class="small">冰点·上市以来新低 共 4 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2019-12-23</td><td>15.04%</td></tr><tr><td>2023-04-20</td><td>13.68%</td></tr><tr><td>2023-06-15</td><td>13.43%</td></tr><tr><td>2024-07-02</td><td>12.79%</td></tr></table>
+<p class="small">高点·上市以来新高 共 5 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2019-12-23</td><td>15.04%</td></tr><tr><td>2020-01-23</td><td>19.47%</td></tr><tr><td>2020-02-03</td><td>32.79%</td></tr><tr><td>2020-03-13</td><td>34.21%</td></tr><tr><td>2024-10-08</td><td>49.62%</td></tr></table>
+<img class="chart" src="chart_510300.png">
+<h2>510500 中证500ETF(沪)（IV(真实)）</h2>
+<h3>波动率历史分布经验值</h3>
+<table><tr><th>min</th><th>P1</th><th>P5</th><th>P10</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P95</th><th>P99</th><th>max</th><th>均值</th><th>标准差</th></tr>
+<tr><td>12.22%</td><td>13.52%</td><td>14.30%</td><td>15.04%</td><td>17.90%</td><td>22.02%</td><td>26.78%</td><td>29.97%</td><td>31.25%</td><td>34.68%</td><td>53.11%</td><td>22.50%</td><td>5.58%</td></tr></table>
+<p class="small">当前值 <b>28.92%</b>，处于历史 <b>86%</b> 分位（2026-08-05 收盘口径）。经验参考：波动率 &lt; P10 视为冰点区（卖方性价比低/买方入场区），&gt; P90 视为高位区（买方风险高/卖方性价比高）。</p>
+<h3>事件统计：波动率极值后 5 个交易日正股表现</h3>
+<table><tr><th>事件类型</th><th>事件数</th>
+<th>出现更低低点</th><th>出现更低收盘</th><th>窗口最低·平均</th><th>窗口最低·中位</th><th>窗口最低·最差</th>
+<th>T+5收盘·平均</th><th>T+5收盘·中位</th><th>T+5上涨概率</th>
+<th>出现更高高点</th><th>出现更高收盘</th><th>窗口最高·平均</th><th>窗口最高·中位</th><th>窗口最高·最好</th></tr>
+<tr><td>冰点·上市以来新低</td><td>10</td>
+<td>90.0%</td><td>90.0%</td>
+<td>-2.5%</td><td>-3.4%</td><td>-4.4%</td>
+<td>-1.1%</td><td>-1.7%</td><td>40.0%</td>
+<td>70.0%</td><td>60.0%</td>
+<td>1.1%</td><td>1.2%</td><td>3.2%</td></tr>
+<tr><td>冰点·≤历史P5</td><td>13</td>
+<td>92.3%</td><td>76.9%</td>
+<td>-1.6%</td><td>-2.1%</td><td>-3.4%</td>
+<td>0.1%</td><td>-0.1%</td><td>46.2%</td>
+<td>100.0%</td><td>69.2%</td>
+<td>1.3%</td><td>1.2%</td><td>3.4%</td></tr>
+<tr><td>高点·上市以来新高</td><td>5</td>
+<td>100.0%</td><td>60.0%</td>
+<td>-5.4%</td><td>-2.2%</td><td>-12.8%</td>
+<td>0.1%</td><td>-2.0%</td><td>40.0%</td>
+<td>80.0%</td><td>80.0%</td>
+<td>8.1%</td><td>6.7%</td><td>22.7%</td></tr>
+<tr><td>高点·≥历史P95</td><td>22</td>
+<td>100.0%</td><td>68.2%</td>
+<td>-3.1%</td><td>-1.8%</td><td>-12.8%</td>
+<td>-0.3%</td><td>0.3%</td><td>59.1%</td>
+<td>90.9%</td><td>86.4%</td>
+<td>3.1%</td><td>1.7%</td><td>21.2%</td></tr>
+</table>
+<h3>事件明细（严格口径：上市以来新低/新高）</h3>
+<p class="small">冰点·上市以来新低 共 10 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2022-09-19</td><td>23.59%</td></tr><tr><td>2022-10-19</td><td>20.01%</td></tr><tr><td>2022-11-21</td><td>19.92%</td></tr><tr><td>2022-12-01</td><td>18.77%</td></tr><tr><td>2022-12-19</td><td>17.14%</td></tr><tr><td>2023-01-03</td><td>15.23%</td></tr><tr><td>2023-01-19</td><td>14.42%</td></tr><tr><td>2023-04-17</td><td>13.88%</td></tr><tr><td>2023-05-22</td><td>13.60%</td></tr><tr><td>2023-06-15</td><td>13.10%</td></tr></table>
+<p class="small">高点·上市以来新高 共 5 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2022-09-19</td><td>23.59%</td></tr><tr><td>2024-01-22</td><td>35.05%</td></tr><tr><td>2024-02-05</td><td>36.40%</td></tr><tr><td>2024-09-30</td><td>43.06%</td></tr><tr><td>2024-10-08</td><td>53.11%</td></tr></table>
+<img class="chart" src="chart_510500.png">
+<h2>588000 科创50ETF（IV(真实)）</h2>
+<h3>波动率历史分布经验值</h3>
+<table><tr><th>min</th><th>P1</th><th>P5</th><th>P10</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P95</th><th>P99</th><th>max</th><th>均值</th><th>标准差</th></tr>
+<tr><td>17.57%</td><td>18.78%</td><td>20.65%</td><td>21.35%</td><td>24.10%</td><td>30.55%</td><td>37.64%</td><td>46.09%</td><td>53.70%</td><td>61.63%</td><td>93.70%</td><td>32.37%</td><td>10.66%</td></tr></table>
+<p class="small">当前值 <b>50.92%</b>，处于历史 <b>93%</b> 分位（2026-08-05 收盘口径）。经验参考：波动率 &lt; P10 视为冰点区（卖方性价比低/买方入场区），&gt; P90 视为高位区（买方风险高/卖方性价比高）。</p>
+<h3>事件统计：波动率极值后 5 个交易日正股表现</h3>
+<table><tr><th>事件类型</th><th>事件数</th>
+<th>出现更低低点</th><th>出现更低收盘</th><th>窗口最低·平均</th><th>窗口最低·中位</th><th>窗口最低·最差</th>
+<th>T+5收盘·平均</th><th>T+5收盘·中位</th><th>T+5上涨概率</th>
+<th>出现更高高点</th><th>出现更高收盘</th><th>窗口最高·平均</th><th>窗口最高·中位</th><th>窗口最高·最好</th></tr>
+<tr><td>冰点·上市以来新低</td><td>2</td>
+<td>100.0%</td><td>100.0%</td>
+<td>-3.8%</td><td>-3.8%</td><td>-4.4%</td>
+<td>-1.9%</td><td>-1.9%</td><td>0.0%</td>
+<td>50.0%</td><td>0.0%</td>
+<td>0.3%</td><td>0.3%</td><td>0.7%</td></tr>
+<tr><td>冰点·≤历史P5</td><td>2</td>
+<td>100.0%</td><td>100.0%</td>
+<td>-3.8%</td><td>-3.8%</td><td>-4.6%</td>
+<td>-2.5%</td><td>-2.5%</td><td>0.0%</td>
+<td>50.0%</td><td>0.0%</td>
+<td>0.0%</td><td>0.0%</td><td>0.7%</td></tr>
+<tr><td>高点·上市以来新高</td><td>12</td>
+<td>91.7%</td><td>75.0%</td>
+<td>-4.0%</td><td>-2.7%</td><td>-19.4%</td>
+<td>2.9%</td><td>-0.8%</td><td>33.3%</td>
+<td>91.7%</td><td>66.7%</td>
+<td>6.5%</td><td>1.8%</td><td>40.9%</td></tr>
+<tr><td>高点·≥历史P95</td><td>20</td>
+<td>100.0%</td><td>85.0%</td>
+<td>-3.7%</td><td>-2.1%</td><td>-19.4%</td>
+<td>1.7%</td><td>-0.1%</td><td>50.0%</td>
+<td>100.0%</td><td>80.0%</td>
+<td>5.6%</td><td>2.5%</td><td>40.9%</td></tr>
+</table>
+<h3>事件明细（严格口径：上市以来新低/新高）</h3>
+<p class="small">冰点·上市以来新低 共 2 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2023-06-05</td><td>19.45%</td></tr><tr><td>2023-07-18</td><td>19.35%</td></tr></table>
+<p class="small">高点·上市以来新高 共 12 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2023-06-05</td><td>19.45%</td></tr><tr><td>2023-07-20</td><td>22.00%</td></tr><tr><td>2023-08-25</td><td>22.95%</td></tr><tr><td>2023-09-08</td><td>25.53%</td></tr><tr><td>2023-10-20</td><td>27.30%</td></tr><tr><td>2024-01-18</td><td>29.70%</td></tr><tr><td>2024-02-02</td><td>30.40%</td></tr><tr><td>2024-02-29</td><td>31.34%</td></tr><tr><td>2024-04-16</td><td>32.40%</td></tr><tr><td>2024-07-23</td><td>32.50%</td></tr><tr><td>2024-09-23</td><td>33.05%</td></tr><tr><td>2024-10-08</td><td>93.70%</td></tr></table>
+<img class="chart" src="chart_588000.png">
+<h2>159919 沪深300ETF(深)（HV20(代理)）</h2>
+<h3>波动率历史分布经验值</h3>
+<table><tr><th>min</th><th>P1</th><th>P5</th><th>P10</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P95</th><th>P99</th><th>max</th><th>均值</th><th>标准差</th></tr>
+<tr><td>6.15%</td><td>7.44%</td><td>9.98%</td><td>11.02%</td><td>13.27%</td><td>15.97%</td><td>19.91%</td><td>28.40%</td><td>33.58%</td><td>60.37%</td><td>64.04%</td><td>18.17%</td><td>8.42%</td></tr></table>
+<p class="small">当前值 <b>26.02%</b>，处于历史 <b>85%</b> 分位（2026-08-06 收盘口径）。经验参考：波动率 &lt; P10 视为冰点区（卖方性价比低/买方入场区），&gt; P90 视为高位区（买方风险高/卖方性价比高）。</p>
+<h3>事件统计：波动率极值后 5 个交易日正股表现</h3>
+<table><tr><th>事件类型</th><th>事件数</th>
+<th>出现更低低点</th><th>出现更低收盘</th><th>窗口最低·平均</th><th>窗口最低·中位</th><th>窗口最低·最差</th>
+<th>T+5收盘·平均</th><th>T+5收盘·中位</th><th>T+5上涨概率</th>
+<th>出现更高高点</th><th>出现更高收盘</th><th>窗口最高·平均</th><th>窗口最高·中位</th><th>窗口最高·最好</th></tr>
+<tr><td>冰点·上市以来新低</td><td>9</td>
+<td>100.0%</td><td>66.7%</td>
+<td>-1.4%</td><td>-1.2%</td><td>-3.3%</td>
+<td>0.2%</td><td>0.1%</td><td>55.6%</td>
+<td>88.9%</td><td>77.8%</td>
+<td>1.6%</td><td>1.8%</td><td>3.3%</td></tr>
+<tr><td>冰点·≤历史P5</td><td>19</td>
+<td>94.7%</td><td>57.9%</td>
+<td>-1.1%</td><td>-0.6%</td><td>-3.5%</td>
+<td>0.5%</td><td>-0.1%</td><td>47.4%</td>
+<td>100.0%</td><td>84.2%</td>
+<td>2.4%</td><td>2.1%</td><td>7.3%</td></tr>
+<tr><td>高点·上市以来新高</td><td>7</td>
+<td>100.0%</td><td>57.1%</td>
+<td>-3.9%</td><td>-1.4%</td><td>-12.0%</td>
+<td>-0.1%</td><td>0.2%</td><td>57.1%</td>
+<td>71.4%</td><td>71.4%</td>
+<td>2.3%</td><td>1.8%</td><td>7.4%</td></tr>
+<tr><td>高点·≥历史P95</td><td>7</td>
+<td>100.0%</td><td>57.1%</td>
+<td>-4.3%</td><td>-1.4%</td><td>-12.0%</td>
+<td>-0.8%</td><td>0.2%</td><td>57.1%</td>
+<td>71.4%</td><td>71.4%</td>
+<td>4.4%</td><td>3.0%</td><td>20.0%</td></tr>
+</table>
+<h3>事件明细（严格口径：上市以来新低/新高）</h3>
+<p class="small">冰点·上市以来新低 共 9 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2019-12-23</td><td>12.42%</td></tr><tr><td>2020-05-15</td><td>11.19%</td></tr><tr><td>2021-06-23</td><td>10.25%</td></tr><tr><td>2021-12-01</td><td>10.19%</td></tr><tr><td>2023-04-14</td><td>8.83%</td></tr><tr><td>2023-12-04</td><td>8.39%</td></tr><tr><td>2024-06-24</td><td>8.06%</td></tr><tr><td>2024-07-03</td><td>7.30%</td></tr><tr><td>2025-05-13</td><td>6.15%</td></tr></table>
+<p class="small">高点·上市以来新高 共 7 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2019-12-23</td><td>12.42%</td></tr><tr><td>2020-01-02</td><td>12.88%</td></tr><tr><td>2020-01-23</td><td>19.33%</td></tr><tr><td>2020-02-03</td><td>37.28%</td></tr><tr><td>2020-07-24</td><td>46.33%</td></tr><tr><td>2024-10-08</td><td>46.56%</td></tr><tr><td>2024-10-24</td><td>64.04%</td></tr></table>
+<img class="chart" src="chart_159919.png">
+<h2>159922 中证500ETF(深)（HV20(代理)）</h2>
+<h3>波动率历史分布经验值</h3>
+<table><tr><th>min</th><th>P1</th><th>P5</th><th>P10</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P95</th><th>P99</th><th>max</th><th>均值</th><th>标准差</th></tr>
+<tr><td>7.82%</td><td>8.49%</td><td>10.99%</td><td>11.76%</td><td>13.54%</td><td>18.74%</td><td>24.37%</td><td>31.79%</td><td>41.63%</td><td>65.01%</td><td>66.49%</td><td>21.03%</td><td>10.37%</td></tr></table>
+<p class="small">当前值 <b>42.73%</b>，处于历史 <b>95%</b> 分位（2026-08-06 收盘口径）。经验参考：波动率 &lt; P10 视为冰点区（卖方性价比低/买方入场区），&gt; P90 视为高位区（买方风险高/卖方性价比高）。</p>
+<h3>事件统计：波动率极值后 5 个交易日正股表现</h3>
+<table><tr><th>事件类型</th><th>事件数</th>
+<th>出现更低低点</th><th>出现更低收盘</th><th>窗口最低·平均</th><th>窗口最低·中位</th><th>窗口最低·最差</th>
+<th>T+5收盘·平均</th><th>T+5收盘·中位</th><th>T+5上涨概率</th>
+<th>出现更高高点</th><th>出现更高收盘</th><th>窗口最高·平均</th><th>窗口最高·中位</th><th>窗口最高·最好</th></tr>
+<tr><td>冰点·上市以来新低</td><td>5</td>
+<td>80.0%</td><td>60.0%</td>
+<td>-1.8%</td><td>-2.1%</td><td>-4.6%</td>
+<td>-0.6%</td><td>0.5%</td><td>60.0%</td>
+<td>100.0%</td><td>80.0%</td>
+<td>1.9%</td><td>2.2%</td><td>2.6%</td></tr>
+<tr><td>冰点·≤历史P5</td><td>6</td>
+<td>100.0%</td><td>50.0%</td>
+<td>-2.0%</td><td>-1.4%</td><td>-6.5%</td>
+<td>0.2%</td><td>0.9%</td><td>66.7%</td>
+<td>100.0%</td><td>83.3%</td>
+<td>2.1%</td><td>2.3%</td><td>3.7%</td></tr>
+<tr><td>高点·上市以来新高</td><td>7</td>
+<td>100.0%</td><td>71.4%</td>
+<td>-4.5%</td><td>-2.5%</td><td>-13.4%</td>
+<td>-1.5%</td><td>-1.3%</td><td>42.9%</td>
+<td>85.7%</td><td>85.7%</td>
+<td>4.2%</td><td>4.6%</td><td>10.7%</td></tr>
+<tr><td>高点·≥历史P95</td><td>7</td>
+<td>100.0%</td><td>28.6%</td>
+<td>-3.1%</td><td>-1.2%</td><td>-13.4%</td>
+<td>0.5%</td><td>1.2%</td><td>85.7%</td>
+<td>85.7%</td><td>85.7%</td>
+<td>6.0%</td><td>4.8%</td><td>20.3%</td></tr>
+</table>
+<h3>事件明细（严格口径：上市以来新低/新高）</h3>
+<p class="small">冰点·上市以来新低 共 5 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2022-09-19</td><td>20.97%</td></tr><tr><td>2022-11-25</td><td>15.53%</td></tr><tr><td>2022-12-13</td><td>9.92%</td></tr><tr><td>2023-01-20</td><td>8.47%</td></tr><tr><td>2023-01-30</td><td>8.21%</td></tr></table>
+<p class="small">高点·上市以来新高 共 7 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2022-09-19</td><td>20.97%</td></tr><tr><td>2022-09-28</td><td>22.21%</td></tr><tr><td>2022-10-12</td><td>22.68%</td></tr><tr><td>2022-10-28</td><td>25.94%</td></tr><tr><td>2024-01-23</td><td>27.82%</td></tr><tr><td>2024-09-30</td><td>52.05%</td></tr><tr><td>2024-10-08</td><td>53.53%</td></tr></table>
+<img class="chart" src="chart_159922.png">
+<h2>159915 创业板ETF（HV20(代理)）</h2>
+<h3>波动率历史分布经验值</h3>
+<table><tr><th>min</th><th>P1</th><th>P5</th><th>P10</th><th>P25</th><th>P50</th><th>P75</th><th>P90</th><th>P95</th><th>P99</th><th>max</th><th>均值</th><th>标准差</th></tr>
+<tr><td>11.34%</td><td>13.26%</td><td>14.64%</td><td>15.68%</td><td>17.70%</td><td>23.16%</td><td>29.35%</td><td>41.57%</td><td>50.36%</td><td>124.95%</td><td>126.29%</td><td>27.17%</td><td>17.11%</td></tr></table>
+<p class="small">当前值 <b>60.32%</b>，处于历史 <b>97%</b> 分位（2026-08-06 收盘口径）。经验参考：波动率 &lt; P10 视为冰点区（卖方性价比低/买方入场区），&gt; P90 视为高位区（买方风险高/卖方性价比高）。</p>
+<h3>事件统计：波动率极值后 5 个交易日正股表现</h3>
+<table><tr><th>事件类型</th><th>事件数</th>
+<th>出现更低低点</th><th>出现更低收盘</th><th>窗口最低·平均</th><th>窗口最低·中位</th><th>窗口最低·最差</th>
+<th>T+5收盘·平均</th><th>T+5收盘·中位</th><th>T+5上涨概率</th>
+<th>出现更高高点</th><th>出现更高收盘</th><th>窗口最高·平均</th><th>窗口最高·中位</th><th>窗口最高·最好</th></tr>
+<tr><td>冰点·上市以来新低</td><td>3</td>
+<td>100.0%</td><td>100.0%</td>
+<td>-2.7%</td><td>-2.4%</td><td>-3.3%</td>
+<td>-1.1%</td><td>-1.4%</td><td>33.3%</td>
+<td>66.7%</td><td>66.7%</td>
+<td>0.9%</td><td>0.8%</td><td>1.8%</td></tr>
+<tr><td>冰点·≤历史P5</td><td>7</td>
+<td>100.0%</td><td>85.7%</td>
+<td>-2.2%</td><td>-1.9%</td><td>-3.8%</td>
+<td>0.1%</td><td>0.4%</td><td>57.1%</td>
+<td>100.0%</td><td>85.7%</td>
+<td>1.7%</td><td>0.8%</td><td>4.7%</td></tr>
+<tr><td>高点·上市以来新高</td><td>9</td>
+<td>77.8%</td><td>55.6%</td>
+<td>-3.7%</td><td>-1.5%</td><td>-24.5%</td>
+<td>1.6%</td><td>4.9%</td><td>66.7%</td>
+<td>88.9%</td><td>88.9%</td>
+<td>9.0%</td><td>7.0%</td><td>44.0%</td></tr>
+<tr><td>高点·≥历史P95</td><td>12</td>
+<td>83.3%</td><td>50.0%</td>
+<td>-4.3%</td><td>-1.5%</td><td>-24.5%</td>
+<td>0.6%</td><td>2.4%</td><td>75.0%</td>
+<td>91.7%</td><td>91.7%</td>
+<td>7.4%</td><td>4.7%</td><td>44.0%</td></tr>
+</table>
+<h3>事件明细（严格口径：上市以来新低/新高）</h3>
+<p class="small">冰点·上市以来新低 共 3 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2022-09-19</td><td>22.33%</td></tr><tr><td>2022-12-09</td><td>17.50%</td></tr><tr><td>2023-03-15</td><td>14.19%</td></tr></table>
+<p class="small">高点·上市以来新高 共 9 次（连续极值日已去重）：</p>
+<table><tr><th>事件日</th><th>当日波动率</th></tr><tr><td>2022-09-19</td><td>22.33%</td></tr><tr><td>2022-09-28</td><td>22.57%</td></tr><tr><td>2022-10-10</td><td>24.13%</td></tr><tr><td>2022-10-28</td><td>32.91%</td></tr><tr><td>2024-02-06</td><td>36.41%</td></tr><tr><td>2024-09-27</td><td>45.07%</td></tr><tr><td>2024-10-08</td><td>95.28%</td></tr><tr><td>2024-10-24</td><td>126.13%</td></tr><tr><td>2024-10-30</td><td>126.29%</td></tr></table>
+<img class="chart" src="chart_159915.png">
+<div class="note"><b>免责声明</b>：本报告为历史统计研究，仅供学习参考，不构成投资建议。样本量小的标的（尤其 2022/2023 年上市的）统计结论稳定性有限；HV20 代理口径（深市）与真实 IV 存在系统性差异（HV 通常滞后于 IV）。</div>
+</body></html>
